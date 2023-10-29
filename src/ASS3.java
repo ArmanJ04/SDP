@@ -21,7 +21,7 @@ class MiniJackDevice implements MiniJack {
 }
 
 class LightingToMiniJackAdapter implements MiniJack {
-    private Lighting lightingDevice;
+    private final Lighting lightingDevice;
 
     public LightingToMiniJackAdapter(Lighting lightingDevice) {
         this.lightingDevice = lightingDevice;
