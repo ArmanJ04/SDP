@@ -3,33 +3,35 @@ import java.util.List;
 
 // Strategy Pattern
 interface MedicationStrategy {
-    void administerMedication(Patient patient);
+    void administerMedication();
 }
 
 class OralMedication implements MedicationStrategy {
     @Override
-    public void administerMedication(Patient patient) {
-        System.out.println("Administering oral medication to " + patient.getName());
+    public void administerMedication() {
+        System.out.println("Administering oral medication.");
     }
 }
 
 class InjectionMedication implements MedicationStrategy {
     @Override
-    public void administerMedication(Patient patient) {
-        System.out.println("Administering injection medication to " + patient.getName());
+    public void administerMedication() {
+        System.out.println("Administering injection medication.");
     }
 }
 
 // Singleton Pattern
 class Hospital {
     private static Hospital instance;
+    private List<Patient> patients;
     private List<Doctor> doctors;
-    private List<Nurse> nurses;
+    private List<Nurse> nurses;  // List of nurses
     private Pharmacy pharmacy;
 
     private Hospital() {
+        patients = new ArrayList<>();
         doctors = new ArrayList<>();
-        nurses = new ArrayList<>();
+        nurses = new ArrayList<>();  // Initialize the list of nurses
         pharmacy = new Pharmacy();
     }
 
@@ -40,12 +42,13 @@ class Hospital {
         return instance;
     }
 
-    public void addDoctor(Doctor doctor) {
-        doctors.add(doctor);
+    public void admitPatient(Patient patient) {
+        patients.add(patient);
     }
 
-    public void addNurse(Nurse nurse) {
-        nurses.add(nurse);
+    public void assignDoctor(Doctor doctor, Patient patient) {
+        doctors.add(doctor);
+        patient.setDoctor(doctor);
     }
 
     public void prescribeMedication(Doctor doctor, Patient patient, MedicationStrategy medication) {
@@ -53,15 +56,22 @@ class Hospital {
         pharmacy.administerMedication(patient, medication);
     }
 
+    // New method to notify nurses
     public void notifyNurses(String message) {
         for (Nurse nurse : nurses) {
             nurse.update(message);
         }
     }
+
+    public void addNurse(Nurse nurse) {
+        nurses.add(nurse);
+    }
 }
+
 
 class Patient {
     private String name;
+    private Doctor doctor;
 
     public Patient(String name) {
         this.name = name;
@@ -69,6 +79,55 @@ class Patient {
 
     public String getName() {
         return name;
+    }
+
+    public Doctor getDoctor() {
+        return doctor;
+    }
+
+    public void setDoctor(Doctor doctor) {
+        this.doctor = doctor;
+    }
+}
+
+class Doctor {
+    private String name;
+
+    public Doctor(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+}
+
+// Adapter Pattern
+class MedicationAdapter implements MedicationStrategy {
+    private MedicationStrategy medication;
+
+    public MedicationAdapter(MedicationStrategy medication) {
+        this.medication = medication;
+    }
+
+    @Override
+    public void administerMedication() {
+        medication.administerMedication();
+    }
+}
+
+// Decorator Pattern
+class PainkillerDecorator implements MedicationStrategy {
+    private MedicationStrategy medication;
+
+    public PainkillerDecorator(MedicationStrategy medication) {
+        this.medication = medication;
+    }
+
+    @Override
+    public void administerMedication() {
+        medication.administerMedication();
+        System.out.println("Adding painkiller.");
     }
 }
 
@@ -90,43 +149,10 @@ class Nurse implements MedicationObserver {
     }
 }
 
-class Doctor {
-    private String name;
-
-    public Doctor(String name) {
-        this.name = name;
-    }
-
-    public String getName() {
-        return name;
-    }
-}
-
-// Adapter Pattern
-class MedicationAdapter {
-    private MedicationStrategy medication;
-
-    public MedicationAdapter(MedicationStrategy medication) {
-        this.medication = medication;
-    }
-
-    public void administerMedication(Patient patient) {
-        medication.administerMedication(patient);
-    }
-}
-
-// Decorator Pattern
-class PainkillerDecorator implements MedicationStrategy {
-    private MedicationStrategy medication;
-
-    public PainkillerDecorator(MedicationStrategy medication) {
-        this.medication = medication;
-    }
-
-    @Override
-    public void administerMedication(Patient patient) {
-        medication.administerMedication(patient);
-        System.out.println("Adding painkiller to the medication for " + patient.getName());
+class Pharmacy {
+    public void administerMedication(Patient patient, MedicationStrategy medication) {
+        System.out.println("Pharmacy administers medication to " + patient.getName());
+        medication.administerMedication();
     }
 }
 
@@ -134,19 +160,12 @@ class PainkillerDecorator implements MedicationStrategy {
 class MedicationFactory {
     public MedicationStrategy createMedication(String type) {
         if (type.equalsIgnoreCase("oral")) {
-            return new OralMedication();
+            return new MedicationAdapter(new OralMedication());
         } else if (type.equalsIgnoreCase("injection")) {
-            return new InjectionMedication();
+            return new MedicationAdapter(new InjectionMedication());
         } else {
             return null;
         }
-    }
-}
-
-class Pharmacy {
-    public void administerMedication(Patient patient, MedicationStrategy medication) {
-        System.out.println("Pharmacy administers medication to " + patient.getName());
-        medication.administerMedication(patient);
     }
 }
 
@@ -161,18 +180,22 @@ public class Final {
         Nurse nurse1 = new Nurse("Nurse Alice");
         Nurse nurse2 = new Nurse("Nurse Bob");
 
-        hospital.addDoctor(doctor1);
-        hospital.addDoctor(doctor2);
+        hospital.admitPatient(patient1);
+        hospital.admitPatient(patient2);
+        hospital.assignDoctor(doctor1, patient1);
+        hospital.assignDoctor(doctor2, patient2);
+
         hospital.addNurse(nurse1);
         hospital.addNurse(nurse2);
 
         MedicationFactory medicationFactory = new MedicationFactory();
+
         MedicationStrategy oralMedication = medicationFactory.createMedication("oral");
         MedicationStrategy injectionMedication = medicationFactory.createMedication("injection");
-        MedicationStrategy oralMedicationWithPainkiller = new PainkillerDecorator(oralMedication);
 
         hospital.prescribeMedication(doctor1, patient1, oralMedication);
         hospital.prescribeMedication(doctor2, patient2, injectionMedication);
-        hospital.prescribeMedication(doctor2, patient1, oralMedicationWithPainkiller);
+
+        hospital.notifyNurses("Medication administered to patients.");
     }
 }
