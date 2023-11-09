@@ -102,3 +102,5 @@ medicine.addDecorator(flavorDecorator);
 
 // Display updated medicine information
 System.out.println(medicine.getDosage());  // Output: Medium dosage, Flavor: Mint
+
+![image](https://github.com/ArmanJ04/SDP/assets/57132784/5bca639e-d90d-4a4b-b158-099466c01b67)
