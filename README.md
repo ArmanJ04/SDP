@@ -72,7 +72,7 @@ The primary aim of the Medicine System project is to demonstrate the practical a
 2. Open the project in your preferred Java IDE.
 
 3. Run the `Main` class to see the example usage of the medicine system.
-
+![dia](https://github.com/ArmanJ04/SDP/assets/57132784/8df95ff7-d736-44ec-b2f1-0b5dfb95e53e)
 <!-- Example Usage Section -->
 ## Example Usage
 
@@ -103,4 +103,4 @@ medicine.addDecorator(flavorDecorator);
 // Display updated medicine information
 System.out.println(medicine.getDosage());  // Output: Medium dosage, Flavor: Mint
 
-![image](https://github.com/ArmanJ04/SDP/assets/57132784/5bca639e-d90d-4a4b-b158-099466c01b67)
+
