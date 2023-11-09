@@ -1,99 +1,33 @@
-import java.util.Scanner;
-
-class PaymentProcessorSingleton {
-    private static PaymentProcessorSingleton instance = null;
-    private PaymentStrategy paymentStrategy;
-
-    private PaymentProcessorSingleton() {
-        initialize();
-    }
-
-    public static PaymentProcessorSingleton getInstance() {
-        if (instance == null) {
-            instance = new PaymentProcessorSingleton();
-        }
-        return instance;
-    }
-
-    private void initialize() {
-        paymentStrategy = null;
-    }
-
-    public void setPaymentStrategy(PaymentStrategy paymentStrategy) {
-        this.paymentStrategy = paymentStrategy;
-    }
-
-    public String processPayment(double amount) {
-        if (paymentStrategy != null) {
-            return paymentStrategy.processPayment(amount);
-        } else {
-            throw new IllegalArgumentException("Payment strategy is not set");
-        }
-    }
-}
-
-interface PaymentStrategy {
-    String processPayment(double amount);
-}
-
-class CreditCardPayment implements PaymentStrategy {
-    @Override
-    public String processPayment(double amount) {
-        int authorizationCode = authorizeCreditCard(amount);
-        String captureStatus = capturePayment(amount);
-        return String.format("Paid $%.2f via Credit Card (Authorization Code: %d, Capture Status: %s)", amount, authorizationCode, captureStatus);
-    }
-
-    private int authorizeCreditCard(double amount) {
-        return (int) (Math.random() * 9000) + 1000;
-    }
-
-    private String capturePayment(double amount) {
-        return "Success";
-    }
-}
-
-class PayPalPayment implements PaymentStrategy {
-    @Override
-    public String processPayment(double amount) {
-        String paymentId = initiatePayPalPayment(amount);
-        String paymentStatus = checkPayPalPaymentStatus(paymentId);
-        return String.format("Paid $%.2f via PayPal (Payment ID: %s, Status: %s)", amount, paymentId, paymentStatus);
-    }
-
-    private String initiatePayPalPayment(double amount) {
-        return "PAYPAL-" + (int) (Math.random() * 90000) + 10000;
-    }
-
-    private String checkPayPalPaymentStatus(String paymentId) {
-        return "Completed";
-    }
-}
+import patterns.factory.MedicineFactory;
+import patterns.observer.DosageChangeObserver;
+import patterns.observer.DosageObserver;
+import patterns.strategy.LowDosageStrategy;
+import patterns.strategy.MediumDosageStrategy;
+import patterns.decorator.FlavorDecorator;
+import patterns.adapter.LegacyMedicineSystem;
+import patterns.adapter.MedicineAdapter;
 
 public class Main {
     public static void main(String[] args) {
-        PaymentProcessorSingleton paymentProcessor = PaymentProcessorSingleton.getInstance();
+        patterns.singleton.Medicine medicine = MedicineFactory.createMedicine("Aspirin", new LowDosageStrategy());
 
-        Scanner scanner = new Scanner(System.in);
-        System.out.print("Enter the payment amount: ");
-        double amount = scanner.nextDouble();
+        DosageObserver observer1 = new DosageChangeObserver("Observer1");
+        DosageObserver observer2 = new DosageChangeObserver("Observer2");
 
-        System.out.println("Select a payment method:");
-        System.out.println("1. Credit Card");
-        System.out.println("2. PayPal");
-        System.out.print("Enter 1 or 2: ");
-        int choice = scanner.nextInt();
+        medicine.addObserver(observer1);
+        medicine.addObserver(observer2);
 
-        if (choice == 1) {
-            paymentProcessor.setPaymentStrategy(new CreditCardPayment());
-        } else if (choice == 2) {
-            paymentProcessor.setPaymentStrategy(new PayPalPayment());
-        } else {
-            System.out.println("Invalid choice. Please select 1 or 2.");
-            System.exit(1);
-        }
+        System.out.println(medicine.getName());
+        System.out.println(medicine.getDosage());
 
-        String paymentResult = paymentProcessor.processPayment(amount);
-        System.out.println(paymentResult);
+        medicine.setDosageStrategy(new MediumDosageStrategy());
+
+        patterns.decorator.MedicineDecorator flavorDecorator = new FlavorDecorator("Mint");
+        medicine.addDecorator(flavorDecorator);
+
+        System.out.println(medicine.getDosage());
+
+        LegacyMedicineSystem legacySystem = new MedicineAdapter(medicine);
+        legacySystem.displayInfo();
     }
 }
